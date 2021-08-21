@@ -16,6 +16,7 @@
 const int PIN_RED   = 27;
 const int PIN_GREEN = 26;
 const int PIN_BLUE  = 25;
+
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
@@ -73,6 +74,7 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);
 }
 
+
 void loop() {
   // Acess the variables for each board
   /*int board1X = boardsStruct[0].x;
@@ -81,17 +83,20 @@ void loop() {
     int board2Y = boardsStruct[1].y;
     int board3X = boardsStruct[2].x;
     int board3Y = boardsStruct[2].y;*/
-  dataRed = map(boardsStruct[0].x, 0, 300, 0, 255);
-  dataGreen = map(boardsStruct[1].x, 0, 3000, 0, 255); //because its a TOF in mm
-  dataBlue = map(boardsStruct[2].x, 0, 300, 0, 255);
+
+  int dataRed = boardsStruct[0].x;
+  int dataGreen = (boardsStruct[1].x) / 10; // Divide by 10 because its a TOF and retuens mm
+  int dataBlue = boardsStruct[2].x;
   Serial.println( (String)"Id 1 value Red = " + dataRed + (String)"  Id 2 Value Green = " + dataGreen + (String)"  Id 3 Value Blue = " + dataBlue);
+
   // Write the colors to the strip
-  if (dataRed + dataGreen + dataBlue <= 768) {
+  if ((20 >= dataRed <= 275) || (20 >= dataGreen <= 275) || (20 >= dataBlue <= 275)) {
     analogWrite(PIN_RED,   dataRed);
     analogWrite(PIN_GREEN, dataGreen);
-    analogWrite(PIN_BLUE,  dataBlue);
+    analogWrite(PIN_BLUE, dataBlue);
   }
   else {
+    Serial.println("Here print Black");
     analogWrite(PIN_RED,   0);
     analogWrite(PIN_GREEN, 0);
     analogWrite(PIN_BLUE,  0);
