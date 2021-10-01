@@ -8,7 +8,7 @@
 #include <espnow.h>
 #include <Ultrasonic.h>
 
-Ultrasonic ultrasonic(16, 5); // Trig , Echoe for Wemos mini
+Ultrasonic ultrasonic(D5,D6); // Trig , Echoe for Wemos mini
 int distance;
 // Mac address of the slave
 uint8_t peer1[] = {0x3C, 0x61,0x05,0x10,0x96,0x1C};
@@ -44,10 +44,14 @@ void setup() {
 void loop() {
     // Set values to send
   distance = ultrasonic.read();
-  myMessage.id = 3;
-  myMessage.distance = distance;
-  Serial.println(distance);
+  int distance2 = constrain(distance, 30,288);
+  //Serial.println(distance2);
+  int distance_tx = map(distance2, 30, 288, 0, 255);
+  //Serial.println(distance_tx);
+  myMessage.id = 3;  //Change the number for each device
+  myMessage.distance = distance_tx;
+  Serial.println(distance_tx);
   Serial.println("Send a new message");
   esp_now_send(NULL, (uint8_t *) &myMessage, sizeof(myMessage));
-  delay(300);
+  delay(250);
 }
