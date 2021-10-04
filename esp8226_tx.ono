@@ -8,6 +8,7 @@
 #include <espnow.h>
 #include <Ultrasonic.h>
 
+
 Ultrasonic ultrasonic(D5,D6); // Trig , Echoe for Wemos mini
 int distance;
 // Mac address of the slave
@@ -24,6 +25,7 @@ void onSent(uint8_t *mac_addr, uint8_t sendStatus) {
 }
 void setup() {
   Serial.begin(115200);
+  
   WiFi.mode(WIFI_STA);
   // Get Mac Add
   Serial.print("Mac Address: ");
@@ -40,6 +42,8 @@ void setup() {
   esp_now_add_peer(peer1, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
   Serial.println("Registering send callback function");
   esp_now_register_send_cb(onSent);
+  pinMode(LED_BUILTIN, OUTPUT); // set LED pin to OUTPUT
+
 }
 void loop() {
     // Set values to send
@@ -48,10 +52,11 @@ void loop() {
   //Serial.println(distance2);
   int distance_tx = map(distance2, 30, 288, 0, 255);
   //Serial.println(distance_tx);
-  myMessage.id = 3;  //Change the number for each device
+  myMessage.id = 1;  //Change the number for each device
   myMessage.distance = distance_tx;
   Serial.println(distance_tx);
   Serial.println("Send a new message");
   esp_now_send(NULL, (uint8_t *) &myMessage, sizeof(myMessage));
   delay(250);
+   
 }
