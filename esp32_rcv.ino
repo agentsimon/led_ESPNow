@@ -1,106 +1,63 @@
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp-now-many-to-one-esp32/
+/**
+   ESP-NOW
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*********/
-
-#include <esp_now.h>
-#include <WiFi.h>
+   Sender
+*/
 #include <Arduino.h>
-#include <analogWrite.h>
-const int PIN_RED   = 27;
-const int PIN_GREEN = 26;
-const int PIN_BLUE  = 25;
-
-// Structure example to receive data
-// Must match the sender structure
-typedef struct struct_message {
+#include <ESP8266WiFi.h>
+#include <espnow.h>
+int pin = 5;
+unsigned long duration;
+// Mac address of the slave
+uint8_t peer1[] = {0x3C, 0x61, 0x05, 0x10, 0x96, 0x1C};
+typedef struct message {
   int id;
-  int x;
-} struct_message;
-int dataRed = 0;
-int dataGreen = 0;
-int dataBlue = 0;
-// Create a struct_message called myData
-struct_message myData;
-
-// Create a structure to hold the readings from each board
-struct_message board1;
-struct_message board2;
-struct_message board3;
-
-// Create an array with all the structures
-struct_message boardsStruct[3] = {board1, board2, board3};
-
-// callback function that will be executed when data is received
-void OnDataRecv(const uint8_t * mac_addr, const uint8_t *incomingData, int len) {
-  char macStr[18];
-  //Serial.print("Packet received from: ");
-  //snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-  //mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  //Serial.println(macStr);
-  memcpy(&myData, incomingData, sizeof(myData));
-  //Serial.printf("Board ID %u: %u bytes\n", myData.id, len);
-  // Update the structures with the new incoming data
-  boardsStruct[myData.id - 1].x = myData.x;
-
-  //Serial.printf("x value: %d \n", boardsStruct[myData.id-1].x);
-
-  //Serial.println();
+  int distance;
+  int distance_tx;
+};
+struct message myMessage;
+void onSent(uint8_t *mac_addr, uint8_t sendStatus) {
+  Serial.println("Status:");
+  Serial.println(sendStatus);
 }
-
 void setup() {
-  //Initialize Serial Monitor
   Serial.begin(115200);
-  analogWriteResolution(PIN_RED,   12);
-  analogWriteResolution(PIN_GREEN, 12);
-  analogWriteResolution(PIN_BLUE,  12);
-  //Set device as a Wi-Fi Station
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(pin, INPUT);
+  delay(500);
   WiFi.mode(WIFI_STA);
-
-  //Init ESP-NOW
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
+  // Get Mac Add
+  Serial.print("Mac Address: ");
+  Serial.print(WiFi.macAddress());
+  Serial.println("ESP-Now Sender");
+  // Initializing the ESP-NOW
+  if (esp_now_init() != 0) {
+    Serial.println("Problem during ESP-NOW init");
     return;
   }
-
-  // Once ESPNow is successfully Init, we will register for recv CB to
-  // get recv packer info
-  esp_now_register_recv_cb(OnDataRecv);
+  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+  // Register the peer
+  Serial.println("Registering a peer");
+  esp_now_add_peer(peer1, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+  Serial.println("Registering send callback function");
+  esp_now_register_send_cb(onSent);
 }
-
-
 void loop() {
-  // Acess the variables for each board
-  /*int board1X = boardsStruct[0].x;
-    int board1Y = boardsStruct[0].y;
-    int board2X = boardsStruct[1].x;
-    int board2Y = boardsStruct[1].y;
-    int board3X = boardsStruct[2].x;
-    int board3Y = boardsStruct[2].y;*/
-
-  int dataRed = boardsStruct[0].x;
-  int dataGreen = (boardsStruct[1].x) / 10; // Divide by 10 because its a TOF and retuens mm
-  int dataBlue = boardsStruct[2].x;
-  Serial.println( (String)"Id 1 value Red = " + dataRed + (String)"  Id 2 Value Green = " + dataGreen + (String)"  Id 3 Value Blue = " + dataBlue);
-
-  // Write the colors to the strip
-  if ((20 >= dataRed <= 275) || (20 >= dataGreen <= 275) || (20 >= dataBlue <= 275)) {
-    analogWrite(PIN_RED,   dataRed);
-    analogWrite(PIN_GREEN, dataGreen);
-    analogWrite(PIN_BLUE, dataBlue);
-  }
-  else {
-    Serial.println("Here print Black");
-    analogWrite(PIN_RED,   0);
-    analogWrite(PIN_GREEN, 0);
-    analogWrite(PIN_BLUE,  0);
-
-  }
-  delay(310);
+  //digitalWrite(LED_BUILTIN, HIGH);   // turn the LED
+  // Set values to send
+  uint16_t distance = 0;
+  duration = pulseIn(pin, HIGH);
+  distance = duration/10;
+  //Serial.println(distance);
+  //int distance2 = constrain(distance, 30, 2880);
+  int distance_tx = map(distance, 30, 4880, 0, 255);
+  myMessage.id = 3;  //Change the id number for each device
+  myMessage.distance = distance;
+  Serial.println(distance);
+  
+  Serial.println("Send a new message");
+  esp_now_send(NULL, (uint8_t *) &myMessage, sizeof(myMessage));
+  delay(200);
+  digitalWrite(LED_BUILTIN, LOW);
 }
