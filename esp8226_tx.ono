@@ -1,22 +1,19 @@
 /**
- * ESP-NOW
- * 
- * Sender
+   ESP-NOW
+
+   Sender
 */
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <espnow.h>
-#include <Ultrasonic.h>
-
-
-Ultrasonic ultrasonic(D5,D6); // Trig , Echoe for Wemos mini
-int distance;
+int pin = 5;
+unsigned long duration;
 // Mac address of the slave
-uint8_t peer1[] = {0x3C, 0x61,0x05,0x10,0x96,0x1C};
+uint8_t peer1[] = {0x3C, 0x61, 0x05, 0x10, 0x96, 0x1C};
 typedef struct message {
-   int id;
-   int distance;
-   
+  int id;
+  int distance;
+  int distance_tx;
 };
 struct message myMessage;
 void onSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -25,7 +22,10 @@ void onSent(uint8_t *mac_addr, uint8_t sendStatus) {
 }
 void setup() {
   Serial.begin(115200);
-  
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(pin, INPUT);
+  delay(500);
   WiFi.mode(WIFI_STA);
   // Get Mac Add
   Serial.print("Mac Address: ");
@@ -42,21 +42,22 @@ void setup() {
   esp_now_add_peer(peer1, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
   Serial.println("Registering send callback function");
   esp_now_register_send_cb(onSent);
-  pinMode(LED_BUILTIN, OUTPUT); // set LED pin to OUTPUT
-
 }
 void loop() {
-    // Set values to send
-  distance = ultrasonic.read();
-  int distance2 = constrain(distance, 30,288);
-  //Serial.println(distance2);
-  int distance_tx = map(distance2, 30, 288, 0, 255);
-  //Serial.println(distance_tx);
-  myMessage.id = 1;  //Change the number for each device
-  myMessage.distance = distance_tx;
-  Serial.println(distance_tx);
+  //digitalWrite(LED_BUILTIN, HIGH);   // turn the LED
+  // Set values to send
+  uint16_t distance = 0;
+  duration = pulseIn(pin, HIGH);
+  distance = duration/10;
+  //Serial.println(distance);
+  //int distance2 = constrain(distance, 30, 2880);
+  //int distance_tx = map(distance, 30, 4880, 0, 255);
+  myMessage.id = 3;  //Change the id number for each device
+  myMessage.distance = distance;
+  Serial.println(distance);
+  
   Serial.println("Send a new message");
   esp_now_send(NULL, (uint8_t *) &myMessage, sizeof(myMessage));
-  delay(250);
-   
+  delay(200);
+  digitalWrite(LED_BUILTIN, LOW);
 }
