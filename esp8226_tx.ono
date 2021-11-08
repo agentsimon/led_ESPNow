@@ -9,7 +9,7 @@
 int pin = 5;
 unsigned long duration;
 // Mac address of the slave
-uint8_t peer1[] = {0x3C, 0x61, 0x05, 0x10, 0x96, 0x1C};
+uint8_t peer1[] = {0x3C, 0x71, 0xBF, 0x3A, 0xD1, 0xF5}; //make sure this is the MAC address of the reciever
 typedef struct message {
   int id;
   int distance;
