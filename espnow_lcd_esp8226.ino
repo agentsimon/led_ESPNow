@@ -64,7 +64,7 @@ void setup() {
 
   /* show start screen */
   display.clear();
-  display.setFont(ArialMT_Plain_16);
+  display.setFont(ArialMT_Plain_24);
   display.drawString(0, 0, "Value-");
   display.drawString(0, 16, "Monitor");
   display.setFont(ArialMT_Plain_10);
@@ -111,13 +111,13 @@ void loop() {
   //draw display
   display.clear();
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(0, 10, "Red:");
-  display.drawString(40, 10, (String)dataRed2);
-  display.drawString(0, 30, "Green:");
-  display.drawString(40, 30, (String)dataGreen2);
-  display.drawString(0, 50, "Blue:");
-  display.drawString(40, 50, (String)dataBlue2);
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(0, 2, "Red :");
+  display.drawString(55, 2, (String)dataRed2);
+  display.drawString(0, 24, "Green :");
+  display.drawString(55, 24, (String)dataGreen2);
+  display.drawString(0, 47, "Blue :");
+  display.drawString(55, 47, (String)dataBlue2);
   display.display();
   Serial.println( (String)"Id 1 value Red = " + dataRed2 + (String)"  Id 2 Value Green = " + dataGreen2 + (String)"  Id 3 Value Blue = " + dataBlue2);
   // Write the colors to the strip
